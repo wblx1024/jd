@@ -39,6 +39,9 @@ def convert_age(age_str):
     else:
         return -1
 
+    #获取用户特征，对用户年龄进行离散化，而后对年龄，性别，用户等级进行one hot 编码
+    #os.path.exists():检查文件路径指向的文件是否存在（不为空），是返回True
+    #pickle为python的一个持久性存储的模块,将程序中运行的对象信息保存到文件中去，永久存储。
 def get_basic_user_feat():
     dump_path = './cache/basic_user.pkl'
     if os.path.exists(dump_path):
@@ -53,7 +56,7 @@ def get_basic_user_feat():
         pickle.dump(user, open(dump_path, 'w'))
     return user
 
-
+#产品的基本特征，只是对产品属性进行one hot处理
 def get_basic_product_feat():
     dump_path = './cache/basic_product.pkl'
     if os.path.exists(dump_path):
@@ -67,7 +70,7 @@ def get_basic_product_feat():
         pickle.dump(product, open(dump_path, 'w'))
     return product
 
-
+#获取各个月的行为数据
 def get_actions_1():
     action = pd.read_csv(action_1_path)
     return action
@@ -80,7 +83,8 @@ def get_actions_3():
     action3 = pd.read_csv(action_3_path)
     return action3
 
-
+#将几个月的行为数据拼接在一起，列对齐
+#时间窗口划分，对指定一段时间窗口内数据进行提取
 def get_actions(start_date, end_date):
     """
 
@@ -100,7 +104,8 @@ def get_actions(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#获取指定时间窗口内行为数据特征
+#按用户-商品对儿进行不同类型行为的求和统计，（后续进一步提炼出下单行为占用户其他行为比率）
 def get_action_feat(start_date, end_date):
     dump_path = './cache/action_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
@@ -115,7 +120,7 @@ def get_action_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#行为数据按距离当前时间窗口结束日期远近进行权重赋值，exp(-x),x-间隔天数
 def get_accumulate_action_feat(start_date, end_date):
     dump_path = './cache/action_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
@@ -144,7 +149,7 @@ def get_accumulate_action_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#评论信息特征获取，对评论数量进行one hot编码
 def get_comments_product_feat(start_date, end_date):
     dump_path = './cache/comments_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
@@ -166,7 +171,7 @@ def get_comments_product_feat(start_date, end_date):
         pickle.dump(comments, open(dump_path, 'w'))
     return comments
 
-
+#用户特征进一步提取，将用户的下单行为占各类其他行为的比率提取为特征
 def get_accumulate_user_feat(start_date, end_date):
     feature = ['user_id', 'user_action_1_ratio', 'user_action_2_ratio', 'user_action_3_ratio',
                'user_action_5_ratio', 'user_action_6_ratio']
@@ -187,7 +192,7 @@ def get_accumulate_user_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#商品特征进一步提取，将商品下单行为占其他行为的比率提取为特征
 def get_accumulate_product_feat(start_date, end_date):
     feature = ['sku_id', 'product_action_1_ratio', 'product_action_2_ratio', 'product_action_3_ratio',
                'product_action_5_ratio', 'product_action_6_ratio']
@@ -208,7 +213,7 @@ def get_accumulate_product_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#将发生过下单行为的用户-商品对儿提取出来，贴上标签
 def get_labels(start_date, end_date):
     dump_path = './cache/labels_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
