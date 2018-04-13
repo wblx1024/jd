@@ -289,7 +289,8 @@ def make_train_set(train_start_date, train_end_date, test_start_date, test_end_d
             if actions is None:
                 actions = get_action_feat(start_days, train_end_date)
             else:
-                actions = pd.merge(actions, get_action_feat(start_days, train_end_date), how='left',
+              #将不同时间窗口的行为数据特征全连接成新表（拼接），由左至右时间窗口增大，列数*9
+                actions = pd.merge(actions, get_action_feat(start_days, train_end_date), how='outer',
                                    on=['user_id', 'sku_id'])
 
         actions = pd.merge(actions, user, how='left', on='user_id')
