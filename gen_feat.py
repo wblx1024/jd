@@ -314,7 +314,7 @@ def make_train_set(train_start_date, train_end_date, test_start_date, test_end_d
 
     return users, actions, labels
 
-
+#本地评测代码
 def report(pred, label):
 
     actions = label
@@ -331,7 +331,7 @@ def report(pred, label):
     all_user_test_item_pair = result['user_id'].map(str) + '-' + result['sku_id'].map(str)
     all_user_test_item_pair = np.array(all_user_test_item_pair)
 
-    # 计算所有用户购买评价指标
+    # 计算所有     用户购买评价指标
     pos, neg = 0,0
     for user_id in all_user_test_set:
         if user_id in all_user_set:
