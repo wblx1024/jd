@@ -129,11 +129,12 @@ def get_accumulate_action_feat(start_date, end_date):
         actions = get_actions(start_date, end_date)
         df = pd.get_dummies(actions['type'], prefix='action')
         actions = pd.concat([actions, df], axis=1) # type: pd.DataFrame
-        #近期行为按时间衰减
+        #行为数据权重按距离结束日期时间指数衰减
         actions['weights'] = actions['time'].map(lambda x: datetime.strptime(end_date, '%Y-%m-%d') - datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
         #actions['weights'] = time.strptime(end_date, '%Y-%m-%d') - actions['datetime']
         actions['weights'] = actions['weights'].map(lambda x: math.exp(-x.days))
         print actions.head(10)
+        #各类型行为数据赋予权重
         actions['action_1'] = actions['action_1'] * actions['weights']
         actions['action_2'] = actions['action_2'] * actions['weights']
         actions['action_3'] = actions['action_3'] * actions['weights']
@@ -149,7 +150,7 @@ def get_accumulate_action_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-#评论信息特征获取，对评论数量进行one hot编码
+#指定时间窗口内评论信息特征获取，对评论数量进行one hot编码
 def get_comments_product_feat(start_date, end_date):
     dump_path = './cache/comments_accumulate_%s_%s.pkl' % (start_date, end_date)
     if os.path.exists(dump_path):
@@ -192,7 +193,7 @@ def get_accumulate_user_feat(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-#商品特征进一步提取，将商品下单行为占其他行为的比率提取为特征
+#商品特征进一步提取，针对商品数据下单行为占其他行为的比率提取为特征
 def get_accumulate_product_feat(start_date, end_date):
     feature = ['sku_id', 'product_action_1_ratio', 'product_action_2_ratio', 'product_action_3_ratio',
                'product_action_5_ratio', 'product_action_6_ratio']
@@ -227,7 +228,7 @@ def get_labels(start_date, end_date):
         pickle.dump(actions, open(dump_path, 'w'))
     return actions
 
-
+#测试集构建
 def make_test_set(train_start_date, train_end_date):
     dump_path = './cache/test_set_%s_%s.pkl' % (train_start_date, train_end_date)
     if os.path.exists(dump_path):
@@ -245,6 +246,7 @@ def make_test_set(train_start_date, train_end_date):
         # actions = get_accumulate_action_feat(train_start_date, train_end_date)
         actions = None
         for i in (1, 2, 3, 5, 7, 10, 15, 21, 30):
+          #时间差相减得到训练集开始时间
             start_days = datetime.strptime(train_end_date, '%Y-%m-%d') - timedelta(days=i)
             start_days = start_days.strftime('%Y-%m-%d')
             if actions is None:
@@ -267,6 +269,7 @@ def make_test_set(train_start_date, train_end_date):
     del actions['sku_id']
     return users, actions
 
+  #训练集构建
 def make_train_set(train_start_date, train_end_date, test_start_date, test_end_date, days=30):
     dump_path = './cache/train_set_%s_%s_%s_%s.pkl' % (train_start_date, train_end_date, test_start_date, test_end_date)
     if os.path.exists(dump_path):
@@ -278,6 +281,7 @@ def make_train_set(train_start_date, train_end_date, test_start_date, test_end_d
         user_acc = get_accumulate_user_feat(start_days, train_end_date)
         product_acc = get_accumulate_product_feat(start_days, train_end_date)
         comment_acc = get_comments_product_feat(train_start_date, train_end_date)
+        #测试集用户商品对儿标签
         labels = get_labels(test_start_date, test_end_date)
 
         # generate 时间窗口
@@ -298,6 +302,7 @@ def make_train_set(train_start_date, train_end_date, test_start_date, test_end_d
         actions = pd.merge(actions, product, how='left', on='sku_id')
         actions = pd.merge(actions, product_acc, how='left', on='sku_id')
         actions = pd.merge(actions, comment_acc, how='left', on='sku_id')
+        #训练集标签添加，用户-商品对儿标签
         actions = pd.merge(actions, labels, how='left', on=['user_id', 'sku_id'])
         actions = actions.fillna(0)
 
