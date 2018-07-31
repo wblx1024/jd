@@ -11,7 +11,7 @@ def xgboost_make_submission():
     train_end_date = '2016-04-11'
     test_start_date = '2016-04-11'
     test_end_date = '2016-04-16'
-
+#测试集构建，根据测试集特征数据集预测后五天的label
     sub_start_date = '2016-03-15'
     sub_end_date = '2016-04-16'
 
@@ -31,8 +31,10 @@ def xgboost_make_submission():
     bst=xgb.train(plst, dtrain, num_round, evallist)
     sub_user_index, sub_trainning_data = make_test_set(sub_start_date, sub_end_date,)
     sub_trainning_data = xgb.DMatrix(sub_trainning_data.values)
+    #预测得到用户-商品对数据标签
     y = bst.predict(sub_trainning_data)
     sub_user_index['label'] = y
+    #将用户-商品对出现概率大于0.03的拿出来
     pred = sub_user_index[sub_user_index['label'] >= 0.03]
     pred = pred[['user_id', 'sku_id']]
     pred = pred.groupby('user_id').first().reset_index()
